@@ -44,7 +44,7 @@ public class LDAPredict implements Serializable {
 
     public double digamma(double x)
     {
-        double p = 0.0;
+        double p;
         x = x + 6;
         p = 1 / ( x * x );
         p = (((0.004166666666667 * p - 0.003968253986254 ) * p + 0.008333333333333) * p - 0.083333333333333) * p ;
@@ -55,7 +55,7 @@ public class LDAPredict implements Serializable {
 
     public double log_sum( double log_a, double log_b )
     {
-        double v = 0.0;
+        double v;
         if (log_a < log_b)
             v = log_b + Math.log( 1 + Math.exp( log_a - log_b ) );
         else
@@ -65,7 +65,7 @@ public class LDAPredict implements Serializable {
 
     public double logGamma(double x)
     {
-        double z=1/(x*x);
+        double z = 1 / (x * x);
         x=x+6;
         z=(((-0.000595238095238*z+0.000793650793651)*z-0.002777777777778)*z+0.083333333333333)/x;
         z=(x-0.5)*Math.log(x)-x+0.918938533204673+z-Math.log(x-1)
@@ -124,17 +124,13 @@ public class LDAPredict implements Serializable {
         Matrix topicTermsMatrix = this.ldaModel.topicsMatrix();
 
         for(int k = 0; k < numTopics; k++) {
-            varGamma[k] = alpha + numTerms / numTopics;
+            varGamma[k] = 1.0 / numTopics;
             digGammaTemp[k] = digamma( varGamma[k] );
             for(int n = 0; n < numTerms; n++)
                 phi[n][k] = 1.0 / numTopics;
         }
         int varIter = 0;
         while(converged > 1e-6) {
-            for (int i = 0; i < varGamma.length; i++) {
-                System.out.print(varGamma[i] + ", ");
-            }
-            System.out.println();
             varIter += 1;
             for(int n = 0; n < numTerms; n++) {
                 phisum = 0;
@@ -187,30 +183,15 @@ public class LDAPredict implements Serializable {
         JavaRDD<Vector> tf = hashingTF.transform(documents);
         System.out.println("Calculate TF completed");
 
-//        JavaPairRDD<Long, Vector> corpus = JavaPairRDD.fromJavaRDD(tf.zipWithIndex().map(
-//            new Function<Tuple2<Vector, Long>, Tuple2<Long, Vector>>() {
-//                public Tuple2<Long, Vector> call(Tuple2<Vector, Long> doc_id) {
-//                    return doc_id.swap();
-//                }
-//            }
-//        ));
-//        corpus.cache();
-
         List<Vector> docList = tf.collect();
         ObjectInputStream objin = new ObjectInputStream(new FileInputStream("data/model/ldaPredict.mod"));
         LDAPredict ldaPredict = (LDAPredict)objin.readObject();
         System.out.println("Load predict model compelted");
-        double[] result = new double[ldaPredict.numTopics];
         Vector usr = docList.get(0);
-        result = ldaPredict.predict(usr);
+        double[] result = ldaPredict.predict(usr);
         for (int i = 0; i < result.length; i++) {
             System.out.print(result[i] + ", ");
         }
-//        System.out.print(result);
-//        for (Vector usr: docList) {
-//            result = ldaPredict.predict(usr);
-//            System.out.println(result);
-//        }
         sc.stop();
     }
 
