@@ -29,20 +29,28 @@ public class TFTest {
         SparkConf conf = new SparkConf().setAppName("datapreTest");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-
-        JavaRDD<List<String>> documents = sc.textFile(inputFile).map(
-                new Function<String, List<String>>() {
-                    public List<String> call(String s) {
-                        String sentences = s.split("\t\n")[0].split("\2")[18];
-                        String[] values = sentences.trim().split(",");
-                        return Arrays.asList(values);
-                    }
+//        JavaRDD<String> source = sc.textFile(inputFile).cache();
+        JavaPairRDD<Long, String> source = JavaPairRDD.fromJavaRDD(sc.textFile(inputFile).zipWithIndex().map(
+            new Function<Tuple2<String,Long>, Tuple2<Long, String>>() {
+                public Tuple2<Long, String> call(Tuple2<String, Long> doc_id) {
+                    return doc_id.swap();
                 }
+            }
+        )).cache();
+
+        JavaRDD<List<String>> documents = source.map(
+            new Function<Tuple2<Long, String>, List<String>>() {
+                public List<String> call(Tuple2<Long, String> t) {
+                    String s = t._2;
+                    String sentences = s.split("\t\n")[0].split("\2")[18];
+                    String[] values = sentences.trim().split(",");
+                    return Arrays.asList(values);
+                }
+            }
         );
 
         HashingTF hashingTF = new HashingTF();
         JavaRDD<Vector> tf = hashingTF.transform(documents);
-//        System.out.println(tf.collect());
 
         JavaPairRDD<Long, Vector> corpus = JavaPairRDD.fromJavaRDD(tf.zipWithIndex().map(
                 new Function<Tuple2<Vector, Long>, Tuple2<Long, Vector>>() {
