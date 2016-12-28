@@ -2,26 +2,22 @@ package com.spark; /**
  * Created by wangyihan on 2016/12/20.
  */
 
-import java.io.*;
-
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.mllib.clustering.DistributedLDAModel;
-import org.apache.spark.mllib.clustering.LocalLDAModel;
 import org.apache.spark.mllib.clustering.LDA;
+import org.apache.spark.mllib.clustering.LocalLDAModel;
+import org.apache.spark.mllib.feature.HashingTF;
 import org.apache.spark.mllib.linalg.Matrix;
 import org.apache.spark.mllib.linalg.Vector;
-import org.apache.spark.mllib.feature.HashingTF;
-import org.apache.spark.util.SystemClock;
-import scala.Tuple2;
-import scala.tools.nsc.backend.icode.Members;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class LDAPredict implements Serializable {
     LocalLDAModel ldaModel = null;
