@@ -1,4 +1,4 @@
-package java.com.spark; /**
+package com.spark; /**
  * Created by wangyihan on 2016/12/20.
  */
 
