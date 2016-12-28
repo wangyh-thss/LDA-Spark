@@ -1,7 +1,7 @@
-/**
+package java.com.spark; /**
  * Created by wangyihan on 2016/12/19.
  */
-
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -23,7 +23,9 @@ import java.util.List;
 
 public class TFTest {
     public static void main(String[] args) throws IOException {
-        String inputFile = "data/testdata";
+        String inputFile = args[0];
+        String outputFile = args[1];
+        String modelDir = args[2];
         SparkConf conf = new SparkConf().setAppName("datapreTest");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
@@ -74,14 +76,14 @@ public class TFTest {
 //        }
 
         // Save LDA Model
-        new TFTest().save(lda, ldaModel);
+        new TFTest().save(lda, ldaModel, modelDir);
         sc.stop();
     }
 
-    public void save(LDA lda, DistributedLDAModel ldaModel) throws IOException {
+    public void save(LDA lda, DistributedLDAModel ldaModel, String outputDir) throws IOException {
         LDAPredict ldaPredict = new LDAPredict(lda, ldaModel.toLocal());
-        String outputLDA = "data/model/ldaPredict.mod";
-        ObjectOutputStream objout = new ObjectOutputStream(new FileOutputStream(outputLDA));
+        ObjectOutputStream objout = new ObjectOutputStream(new FileOutputStream(
+                new File(outputDir, "ldaPredict.mod")));
         objout.writeObject(ldaPredict);
     }
 }
