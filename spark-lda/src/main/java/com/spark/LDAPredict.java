@@ -2,6 +2,9 @@ package com.spark; /**
  * Created by wangyihan on 2016/12/20.
  */
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -160,35 +163,79 @@ public class LDAPredict implements Serializable {
     }
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-        String inputFile = "data/testdata";
-        SparkConf conf = new SparkConf().setAppName("ldaPredict");
+        String inputFile = args[0];
+        String outputFile = args[1];
+        String modelFile = args[2];
+        final int topicNum = Integer.parseInt(args[3]);
+        SparkConf conf = new SparkConf().setAppName("LDAPredict");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
+//        JavaRDD<List<String>> documents = sc.textFile(inputFile).map(
+//            new Function<String, List<String>>() {
+//                public List<String> call(String s) {
+//                    String sentences = s.split("\t\n")[0].split("\2")[18];
+//                    String[] values = sentences.trim().split(",");
+//                    return Arrays.asList(values);
+//                }
+//            }
+//        );
+//
+//        HashingTF hashingTF = new HashingTF();
+//        JavaRDD<Vector> tf = hashingTF.transform(documents);
+////        System.out.println("Calculate TF completed");
+//
+//        List<Vector> docList = tf.collect();
+//        ObjectInputStream objin = new ObjectInputStream(new FileInputStream(modelFile));
+//        LDAPredict ldaPredict = (LDAPredict)objin.readObject();
+////        System.out.println("Load predict model compelted");
+//        Vector usr = docList.get(0);
+//        double[] result = ldaPredict.predict(usr);
+//        for (int i = 0; i < result.length; i++) {
+//            System.out.print(result[i] + ", ");
+//        }
 
-        JavaRDD<List<String>> documents = sc.textFile(inputFile).map(
-            new Function<String, List<String>>() {
-                public List<String> call(String s) {
-                    String sentences = s.split("\t\n")[0].split("\2")[18];
-                    String[] values = sentences.trim().split(",");
-                    return Arrays.asList(values);
+        final HashingTF hashingTF = new HashingTF();
+        ObjectInputStream objin = new ObjectInputStream(new FileInputStream(modelFile));
+        final LDAPredict ldaPredict = (LDAPredict)objin.readObject();
+
+        JavaRDD<String> results = sc.textFile(inputFile).map(
+                new Function<String, String>() {
+                    public String call(String s) throws Exception {
+                        String sentences = s.split("\t\n")[0].split("\2")[18];
+                        String[] values = sentences.trim().split(",");
+                        List<String> document = Arrays.asList(values);
+                        Vector tf = hashingTF.transform(document);
+                        double[] result = ldaPredict.predict(tf);
+
+                        double avg = 1.0 / topicNum;
+                        int value;
+
+                        String str = s + "\2";
+                        for (int i = 0; i < result.length; i++) {
+                            if (result[i] < avg) {
+                                value = 0;
+                            } else {
+                                value = 1;
+                            }
+                            str += value;
+                            if (i < result.length - 1) {
+                                str += ",";
+                            }
+                        }
+                        str += "\n";
+
+                        return str;
+                    }
                 }
-            }
         );
 
-        HashingTF hashingTF = new HashingTF();
-        JavaRDD<Vector> tf = hashingTF.transform(documents);
-        System.out.println("Calculate TF completed");
-
-        List<Vector> docList = tf.collect();
-        ObjectInputStream objin = new ObjectInputStream(new FileInputStream("data/model/ldaPredict.mod"));
-        LDAPredict ldaPredict = (LDAPredict)objin.readObject();
-        System.out.println("Load predict model compelted");
-        Vector usr = docList.get(0);
-        double[] result = ldaPredict.predict(usr);
-        for (int i = 0; i < result.length; i++) {
-            System.out.print(result[i] + ", ");
+        Path outputFilePath = new Path(outputFile);
+        FileSystem hdfs = outputFilePath.getFileSystem(new Configuration());
+        if (hdfs.exists(outputFilePath)) {
+            hdfs.delete(outputFilePath, true);
         }
+        results.saveAsTextFile(outputFile);
+
         sc.stop();
     }
-
 }

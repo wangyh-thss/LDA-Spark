@@ -27,7 +27,7 @@ public class LDATrain {
     public static void main(String[] args) throws IOException {
         String inputFile = args[0];
         String outputFile = args[1];
-        String modelDir = args[2];
+        String modelFile = args[2];
         final int topicNum = Integer.parseInt(args[3]);
         final int maxIterNum = Integer.parseInt(args[4]);
         final double alpha = Double.parseDouble(args[5]);
@@ -145,22 +145,22 @@ public class LDATrain {
 //        }
 
         // Save LDA Model
-        new LDATrain().save(lda, ldaModel, modelDir);
+        new LDATrain().save(lda, ldaModel, modelFile);
         sc.stop();
     }
 
     public void save(LDA lda, DistributedLDAModel ldaModel, String outputDir) throws IOException {
         LDAPredict ldaPredict = new LDAPredict(lda, ldaModel.toLocal());
-        File dir = new File(outputDir);
-        if (!dir.exists() && !dir.isDirectory()) {
-            dir.mkdirs();
-        }
-        File modelFile =  new File(outputDir, "ldaPredict.mod");
+//        File dir = new File(outputDir);
+//        if (!dir.exists() && !dir.isDirectory()) {
+//            dir.mkdirs();
+//        }
+        File modelFile =  new File(outputDir);
         if (modelFile.exists()) {
             modelFile.delete();
         }
         ObjectOutputStream objout = new ObjectOutputStream(new FileOutputStream(
-                new File(outputDir, "ldaPredict.mod")));
+                new File(outputDir)));
         objout.writeObject(ldaPredict);
     }
 }
