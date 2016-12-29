@@ -98,8 +98,10 @@ public class LDATrain {
                 }
             }
         );
-        FileSystem hdfs = FileSystem.get(new Configuration());
+
+//        FileSystem hdfs = FileSystem.get(new Configuration());
         Path outputFilePath = new Path(outputFile);
+        FileSystem hdfs = outputFilePath.getFileSystem(new Configuration());
         if (hdfs.exists(outputFilePath)) {
             hdfs.delete(outputFilePath, true);
         }
