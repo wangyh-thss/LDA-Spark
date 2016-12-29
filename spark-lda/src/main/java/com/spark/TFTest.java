@@ -48,7 +48,7 @@ public class TFTest {
                     String[] values = sentences.trim().split(",");
                     List<String> document = Arrays.asList(values);
                     Vector tf = hashingTF.transform(document);
-                    return Tuple2.apply(tid, tf);
+                    return new Tuple2(tid, tf);
                 }
             }
         ));
@@ -62,7 +62,7 @@ public class TFTest {
                 new Function<Tuple2<Object, Vector>, Tuple2<Long, Vector>>() {
                     public Tuple2<Long, Vector> call(Tuple2<Object, Vector> t) {
                         Long tid = (Long)t._1;
-                        return Tuple2.apply(tid, t._2);
+                        return new Tuple2(tid, t._2);
                     }
                 }
         ));

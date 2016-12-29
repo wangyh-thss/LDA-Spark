@@ -1,0 +1,14 @@
+训练模型可以跑：
+其中 .jar 后面为运行参数，依次为：
+数据文件或路径、输出结果路径、模型保存路径、话题个数
+
+/data/spark/spark/bin/spark-submit --master spark://192.168.11.41:7077 --class com.spark.TFTest  /home/grid/TsinghuaProject/spark-lda-1.0-SNAPSHOT.jar hdfs://master:9000/youku_bid_log/bid_data/youku_bid2016-12-25/00 hdfs://master:9000/thu/test_result /home/grid/TsinghuaProject/model 20 > /home/grid/TsinghuaProject/log/test_train_model_log 2>/home/grid/TsinghuaProject/log/test_train_model_error_log
+
+
+TODO:
+1. 当结果文件存在或模型文件夹不存在时删除或新建，增强鲁棒性
+2. 迭代次数
+3. Predict 改为可调用
+4. 改类名，“TFTest” 不好看
+5. 输入文件尝试通配符时总是跑到一半跪掉，不知道原因...
+6. 调参
