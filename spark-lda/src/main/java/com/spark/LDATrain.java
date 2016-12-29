@@ -29,6 +29,9 @@ public class LDATrain {
         String outputFile = args[1];
         String modelDir = args[2];
         final int topicNum = Integer.parseInt(args[3]);
+        final int maxIterNum = Integer.parseInt(args[4]);
+        final double alpha = Double.parseDouble(args[5]);
+        final double beta = Double.parseDouble(args[6]);
         SparkConf conf = new SparkConf().setAppName("LDATrain");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
@@ -57,7 +60,7 @@ public class LDATrain {
 
         corpus.cache();
 
-        LDA lda = new LDA().setK(topicNum);
+        LDA lda = new LDA().setK(topicNum).setMaxIterations(maxIterNum).setAlpha(alpha).setBeta(beta);
         DistributedLDAModel ldaModel = (DistributedLDAModel)lda.run(corpus);
 
         JavaPairRDD<Long, Vector> topicDist = JavaPairRDD.fromJavaRDD(ldaModel.topicDistributions().toJavaRDD().map(
