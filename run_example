@@ -12,3 +12,7 @@ TODO:
 4. 改类名，“TFTest” 不好看（DONE) rename成LDATrain
 5. 输入文件尝试通配符时总是跑到一半跪掉，不知道原因...(DONE)，似乎是解决了。
 6. 调参
+
+TIPS:
+snapshot-new.jar和snapshot-predict.jar的LDATrain是最新的
+snapshot-predict.jar的LDAPredict是最新的
