@@ -14,7 +14,6 @@ import org.apache.spark.mllib.clustering.DistributedLDAModel;
 import org.apache.spark.mllib.clustering.LDA;
 import org.apache.spark.mllib.feature.HashingTF;
 import org.apache.spark.mllib.linalg.Vector;
-import org.apache.spark.rdd.RDD;
 import scala.Tuple2;
 
 import java.io.File;
@@ -24,13 +23,13 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.List;
 
-public class TFTest {
+public class LDATrain {
     public static void main(String[] args) throws IOException {
         String inputFile = args[0];
         String outputFile = args[1];
         String modelDir = args[2];
         final int topicNum = Integer.parseInt(args[3]);
-        SparkConf conf = new SparkConf().setAppName("datapreTest");
+        SparkConf conf = new SparkConf().setAppName("LDATrain");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         JavaPairRDD<Long, String> source = JavaPairRDD.fromJavaRDD(sc.textFile(inputFile).zipWithIndex().map(
@@ -141,7 +140,7 @@ public class TFTest {
 //        }
 
         // Save LDA Model
-        new TFTest().save(lda, ldaModel, modelDir);
+        new LDATrain().save(lda, ldaModel, modelDir);
         sc.stop();
     }
 
