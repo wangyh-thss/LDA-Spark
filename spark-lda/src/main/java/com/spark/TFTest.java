@@ -2,6 +2,9 @@ package com.spark; /**
  * Created by wangyihan on 2016/12/19.
  */
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -93,6 +96,11 @@ public class TFTest {
                 }
             }
         );
+        FileSystem hdfs = FileSystem.get(new Configuration());
+        Path outputFilePath = new Path(outputFile);
+        if (hdfs.exists(outputFilePath)) {
+            hdfs.delete(outputFilePath, true);
+        }
         textResult.saveAsTextFile(outputFile);
 //        for (Object el: topicDistList) {
 //            Tuple2 tel = (Tuple2) el;
@@ -139,6 +147,14 @@ public class TFTest {
 
     public void save(LDA lda, DistributedLDAModel ldaModel, String outputDir) throws IOException {
         LDAPredict ldaPredict = new LDAPredict(lda, ldaModel.toLocal());
+        File dir = new File(outputDir);
+        if (!dir.exists() && !dir.isDirectory()) {
+            dir.mkdirs();
+        }
+        File modelFile =  new File(outputDir, "ldaPredict.mod");
+        if (modelFile.exists()) {
+            modelFile.delete();
+        }
         ObjectOutputStream objout = new ObjectOutputStream(new FileOutputStream(
                 new File(outputDir, "ldaPredict.mod")));
         objout.writeObject(ldaPredict);
