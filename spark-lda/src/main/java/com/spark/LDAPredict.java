@@ -13,6 +13,7 @@ import org.apache.spark.mllib.clustering.LDA;
 import org.apache.spark.mllib.clustering.LocalLDAModel;
 import org.apache.spark.mllib.feature.HashingTF;
 import org.apache.spark.mllib.linalg.Matrix;
+import org.apache.spark.mllib.linalg.SparseVector;
 import org.apache.spark.mllib.linalg.Vector;
 
 import java.io.FileInputStream;
@@ -78,6 +79,9 @@ public class LDAPredict implements Serializable {
         double varGammaSum = 0.0;
         double[] dig = new double[numTopics];
         int k, n;
+        SparseVector spareUsr = usr.toSparse();
+        int[] indeces = spareUsr.indices();
+        double[] values = spareUsr.values();
 
         for (k = 0; k < numTopics; k++) {
             dig[k] = digamma(varGamma[k]);
@@ -90,12 +94,13 @@ public class LDAPredict implements Serializable {
         for (k = 0; k < numTopics; k++) {
             likelihood += (alpha - 1)*(dig[k] - digsum) + logGamma(varGamma[k])
                     - (varGamma[k] - 1) * (dig[k] - digsum);
-            for (n = 0; n < numTerms; n++) {
+            for (int i = 0; i < indeces.length; i++) {
+                n = indeces[i];
+                double value = values[i];
                 if (topicTermsMatrix.apply(n, k) > 0) {
                     if (phi[n][k] > 0) {
-                        likelihood += usr.apply(n) * ( phi[n][k] * ( (dig[k] - digsum)
+                        likelihood += value * ( phi[n][k] * ( (dig[k] - digsum)
                                 - Math.log(phi[n][k]) + Math.log(topicTermsMatrix.apply(n, k))));
-                        assert likelihood != Double.NaN;
                     }
                 }
             }
@@ -112,6 +117,9 @@ public class LDAPredict implements Serializable {
     }
 
     public double[] predict(Vector usr) {
+        SparseVector sparseUsr = usr.toSparse();
+        int[] indeices = sparseUsr.indices();
+        double[] values = sparseUsr.values();
         double[] varGamma = new double[numTopics];
         double converged = 1.0;
         double phisum = 0.0;
@@ -131,7 +139,9 @@ public class LDAPredict implements Serializable {
         int varIter = 0;
         while(converged > 1e-6) {
             varIter += 1;
-            for(int n = 0; n < numTerms; n++) {
+            for (int i = 0; i < indeices.length; i++) {
+                int n = indeices[i];
+                double value = values[i];
                 phisum = 0;
                 for(int k = 0; k < numTopics; k++) {
                     oldPhi[k] = phi[n][k];
@@ -149,7 +159,7 @@ public class LDAPredict implements Serializable {
                 }
                 for(int k = 0; k < numTopics; k++) {
                     phi[n][k] = Math.exp( phi[n][k] - phisum );
-                    varGamma[k] = varGamma[k] + usr.apply(n) * ( phi[n][k] - oldPhi[k] );
+                    varGamma[k] = varGamma[k] + value * ( phi[n][k] - oldPhi[k] );
                     digGammaTemp[k] = digamma( varGamma[k] );
                 }
             }
@@ -206,7 +216,11 @@ public class LDAPredict implements Serializable {
                         List<String> document = Arrays.asList(values);
                         Vector tf = hashingTF.transform(document);
                         double[] result = ldaPredict.predict(tf);
-
+                        for (int i = 0; i < result.length; i++) {
+                            System.out.print(result[i]);
+                            System.out.print(" ");
+                        }
+                        System.out.println();
                         double avg = 1.0 / topicNum;
                         int value;
 
